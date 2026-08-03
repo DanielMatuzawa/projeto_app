@@ -12,11 +12,11 @@ if 'aportes' not in st.session_state:
     st.session_state.aportes = pd.DataFrame(columns=['Ativo', 'Quantidade', 'Preço Unitário', 'Valor Total', 'Data'])
 
 if 'notas' not in st.session_state:
-    st.session_state.notas = "Escreva aqui suas anotações sobre os estudos, teses de investimento ou metas para PETR4, BBSE3 e KNCR11."
+    st.session_state.notas = ""
 
-# ----------------------------------------------------
-# 1. REGISTRO DE APORTES
-# ----------------------------------------------------
+
+# 1. REGISTRO DE APORTES #
+
 st.sidebar.header("Registrar Novo Aporte")
 ativo_escolhido = st.sidebar.selectbox("Ativo", ["PETR4", "BBSE3", "KNCR11"])
 qtd_aporte = st.sidebar.number_input("Quantidade", min_value=1, step=1)
