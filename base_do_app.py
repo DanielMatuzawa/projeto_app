@@ -5,7 +5,6 @@ from supabase import create_client
 
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
-# Configuração de Conexão com o Supabase com as suas chaves
 SUPABASE_URL = "https://gmpqpiagdnebzafjiogn.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcXBwaWFnZG5lYnphZmppb2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3ODI4NjMsImV4cCI6MjEwMTM1ODg2M30.xDk4lPnIK0oKjEwK2d4oidMQFt67CDoSzJapRkiUlLA"
 
@@ -21,17 +20,12 @@ st.markdown("Foco em: PETR4, BBSE3 e KNCR11 com salvamento automático na nuvem"
 if 'notas' not in st.session_state:
     st.session_state.notas = "Escreva aqui suas anotações sobre os estudos, teses de investimento ou metas para PETR4, BBSE3 e KNCR11."
 
-# Função para carregar os aportes direto do Supabase
 def carregar_aportes():
     try:
         response = supabase.table("aportes").select("*").execute()
         data = response.data
         if data:
             df = pd.DataFrame(data)
-            colunas_desejadas = ['id', 'ativo', 'quantidade', 'preco_pago', 'data']
-            for col in colunas_desejadas:
-                if col not in df.columns:
-                    df[col] = None
             return df
     except:
         pass
@@ -39,7 +33,6 @@ def carregar_aportes():
 
 df_aportes = carregar_aportes()
 
-# Função para buscar o preço atual na B3 via Yahoo Finance
 def obter_preco_atual(ticker_simbolo):
     try:
         ticker = yf.Ticker(ticker_simbolo)
@@ -63,19 +56,22 @@ preco_pago = st.sidebar.number_input("Preço Pago por Unidade (R$)", min_value=0
 data_aporte = st.sidebar.date_input("Data do Aporte")
 
 if st.sidebar.button("Adicionar Aporte"):
-    novo_registro = {
-        "ativo": ativo_escolhido,
-        "quantidade": int(qtd_aporte),
-        "preco_pago": float(preco_pago),
-        "data": str(data_aporte)
-    }
-    supabase.table("aportes").insert(novo_registro).execute()
-    st.sidebar.success("Aporte salvo na nuvem com sucesso!")
-    st.rerun()
+    try:
+        novo_registro = {
+            "ativo": str(ativo_escolhido),
+            "quantidade": int(qtd_aporte),
+            "preco_pago": float(preco_pago),
+            "data": str(data_aporte)
+        }
+        supabase.table("aportes").insert(novo_registro).execute()
+        st.sidebar.success("Aporte salvo na nuvem com sucesso!")
+        st.rerun()
+    except Exception as e:
+        st.sidebar.error(f"Erro ao salvar: {e}")
 
 st.header("Resumo da Carteira com Preços em Tempo Real")
 
-if not df_aportes.empty:
+if not df_aportes.empty and 'quantidade' in df_aportes.columns:
     df = df_aportes.copy()
     
     df['quantidade'] = pd.to_numeric(df['quantidade'])
@@ -120,7 +116,7 @@ else:
 if not df_aportes.empty:
     st.markdown("---")
     st.header("Histórico Detalhado de Aportes")
-    st.dataframe(df_aportes[['id', 'ativo', 'quantidade', 'preco_pago', 'data']])
+    st.dataframe(df_aportes)
 
 st.markdown("---")
 st.header("Área de Anotações e Metas de Estudo")
