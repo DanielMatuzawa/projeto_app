@@ -7,16 +7,16 @@ st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 st.title("Painel de Controle de Investimentos e Estudos")
 st.markdown("Foco em: **PETR4**, **BBSE3** e **KNCR11**")
 
-# Inicializar dados na sessão (para salvar enquanto o app estiver aberto)
+# Inicializar dados na sessão
 if 'aportes' not in st.session_state:
     st.session_state.aportes = pd.DataFrame(columns=['Ativo', 'Quantidade', 'Preço Unitário', 'Valor Total', 'Data'])
 
 if 'notas' not in st.session_state:
-    st.session_state.notas = ""
+    st.session_state.notas = "Escreva aqui suas anotações sobre os estudos, teses de investimento ou metas para PETR4, BBSE3 e KNCR11."
 
-
-# 1. REGISTRO DE APORTES #
-
+# ----------------------------------------------------
+# 1. REGISTRO DE APORTES
+# ----------------------------------------------------
 st.sidebar.header("Registrar Novo Aporte")
 ativo_escolhido = st.sidebar.selectbox("Ativo", ["PETR4", "BBSE3", "KNCR11"])
 qtd_aporte = st.sidebar.number_input("Quantidade", min_value=1, step=1)
@@ -33,11 +33,12 @@ if st.sidebar.button("Adicionar Aporte"):
         'Data': [data_aporte]
     })
     st.session_state.aportes = pd.concat([st.session_state.aportes, novo_dado], ignore_index=True)
-    st.sidebar.success("!")
+    st.sidebar.success("Aporte registrado com sucesso!")
+    st.rerun()
 
-
-# 2. CONSOLIDAÇÃO DA CARTEIRA #
-
+# ----------------------------------------------------
+# 2. CONSOLIDAÇÃO DA CARTEIRA
+# ----------------------------------------------------
 st.header("Resumo da Carteira")
 
 if not st.session_state.aportes.empty:
@@ -50,7 +51,7 @@ if not st.session_state.aportes.empty:
     
     resumo['Preço Médio'] = resumo['Total_Investido'] / resumo['Quantidade_Total']
     
-    # Preços atuais simulados/editáveis (você pode ajustar aqui ou digitar o preço de mercado atual)
+    # Preços atuais editáveis
     st.markdown("### Defina os Preços Atuais de Mercado")
     col1, col2, col3 = st.columns(3)
     
@@ -80,24 +81,34 @@ if not st.session_state.aportes.empty:
     st.markdown("### Posição por Ativo")
     st.dataframe(resumo[['Ativo', 'Quantidade_Total', 'Preço Médio', 'Preço Atual', 'Valor Atual', 'Lucro/Prejuízo (R$)']])
 
-    # Gráfico simples de alocação
+    # Gráfico de alocação
     st.markdown("### Alocação de Recursos")
     st.bar_chart(resumo.set_index('Ativo')['Valor Atual'])
 
 else:
-    st.info("Nenhum aporte registrado ainda. Use a barra lateral à esquerda para cadastrar seus primeiros aportes em PETR4, BBSE3 ou KNCR11.")
+    st.info("Nenhum aporte registrado ainda. Use a barra lateral à esquerda para cadastrar seus primeiros aportes.")
 
-
-# 3. ÁREA DE ANOTAÇÕES E ESTUDOS #
-
-st.markdown("---")
-st.header("Área de Anotações e Metas de Estudo")
-
-st.session_state.notas = st.text_area("Bloco de Notas (Anote teses, dividendos esperados, regras de aporte):", value=st.session_state.notas, height=200)
-
-# 4. HISTÓRICO DE APORTES #
-
+# ----------------------------------------------------
+# 3. HISTÓRICO DE APORTES COM MODO DE EDIÇÃO
+# ----------------------------------------------------
 if not st.session_state.aportes.empty:
     st.markdown("---")
-    st.header("Histórico de Aportes")
-    st.dataframe(st.session_state.aportes)
+    st.header("Histórico Detalhado de Aportes (Editável)")
+    st.markdown("Você pode clicar diretamente na tabela abaixo para editar quantidades, preços ou datas. O valor total será recalculado automaticamente.")
+    
+    # Usando o data_editor para permitir edições diretas na tabela
+    st.session_state.aportes = st.data_editor(
+        st.session_state.aportes, 
+        num_rows="dynamic",
+        key="editor_aportes"
+    )
+    
+    # Recalcula o 'Valor Total' caso o usuário altere Quantidade ou Preço Unitário na tabela
+    st.session_state.aportes['Valor Total'] = st.session_state.aportes['Quantidade'] * st.session_state.aportes['Preço Unitário']
+
+# ----------------------------------------------------
+# 4. ÁREA DE ANOTAÇÕES E ESTUDOS
+# ----------------------------------------------------
+st.markdown("---")
+st.header("Área de Anotações e Metas de Estudo")
+st.session_state.notas = st.text_area("Bloco de Notas:", value=st.session_state.notas, height=200)
