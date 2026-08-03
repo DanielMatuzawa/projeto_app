@@ -6,7 +6,7 @@ from supabase import create_client
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
 SUPABASE_URL = "https://gmpqpiagdnebzafjiogn.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcXBwaWFnZG5lYnphZmppb2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3ODI4NjMsImV4cCI6MjEwMTM1ODg2M30.xDk4lPnIK0oKjEwK2d4oidMQFt67CDoSzJapRkiUlLA"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcHFwaWFnZG5lYnphZmppb2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3ODI4NjMsImV4cCI6MjEwMTM1ODg2M30.xDk4lPnIK0oKjEwK2d4oidMQFt67CDoSzJapRkiUlLA"
 
 @st.cache_resource
 def init_connection():
