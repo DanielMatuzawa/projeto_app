@@ -33,11 +33,11 @@ if st.sidebar.button("Adicionar Aporte"):
         'Data': [data_aporte]
     })
     st.session_state.aportes = pd.concat([st.session_state.aportes, novo_dado], ignore_index=True)
-    st.sidebar.success("Aporte registrado com sucesso!")
+    st.sidebar.success("!")
 
-# ----------------------------------------------------
-# 2. CONSOLIDAÇÃO DA CARTEIRA
-# ----------------------------------------------------
+
+# 2. CONSOLIDAÇÃO DA CARTEIRA #
+
 st.header("Resumo da Carteira")
 
 if not st.session_state.aportes.empty:
@@ -87,18 +87,17 @@ if not st.session_state.aportes.empty:
 else:
     st.info("Nenhum aporte registrado ainda. Use a barra lateral à esquerda para cadastrar seus primeiros aportes em PETR4, BBSE3 ou KNCR11.")
 
-# ----------------------------------------------------
-# 3. ÁREA DE ANOTAÇÕES E ESTUDOS
-# ----------------------------------------------------
+
+# 3. ÁREA DE ANOTAÇÕES E ESTUDOS #
+
 st.markdown("---")
 st.header("Área de Anotações e Metas de Estudo")
 
 st.session_state.notas = st.text_area("Bloco de Notas (Anote teses, dividendos esperados, regras de aporte):", value=st.session_state.notas, height=200)
 
-# ----------------------------------------------------
-# 4. HISTÓRICO DE APORTES
-# ----------------------------------------------------
+# 4. HISTÓRICO DE APORTES #
+
 if not st.session_state.aportes.empty:
     st.markdown("---")
-    st.header("Histórico Detalhado de Aportes")
+    st.header("Histórico de Aportes")
     st.dataframe(st.session_state.aportes)
