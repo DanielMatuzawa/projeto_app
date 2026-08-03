@@ -1,114 +1,82 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
 st.title("Painel de Controle de Investimentos e Estudos")
-st.markdown("Foco em: **PETR4**, **BBSE3** e **KNCR11**")
+st.markdown("Foco em: PETR4, BBSE3 e KNCR11")
 
-# Inicializar dados na sessão
 if 'aportes' not in st.session_state:
-    st.session_state.aportes = pd.DataFrame(columns=['Ativo', 'Quantidade', 'Preço Unitário', 'Valor Total', 'Data'])
+st.session_state.aportes = pd.DataFrame(columns=['Ativo', 'Quantidade', 'Preço Pago', 'Preço Atual', 'Data'])
 
 if 'notas' not in st.session_state:
-    st.session_state.notas = "Escreva aqui suas anotações sobre os estudos, teses de investimento ou metas para PETR4, BBSE3 e KNCR11."
+st.session_state.notas = "Escreva aqui suas anotações sobre os estudos, teses de investimento ou metas para PETR4, BBSE3 e KNCR11."
 
-# ----------------------------------------------------
-# 1. REGISTRO DE APORTES
-# ----------------------------------------------------
 st.sidebar.header("Registrar Novo Aporte")
 ativo_escolhido = st.sidebar.selectbox("Ativo", ["PETR4", "BBSE3", "KNCR11"])
 qtd_aporte = st.sidebar.number_input("Quantidade", min_value=1, step=1)
-preco_aporte = st.sidebar.number_input("Preço Unitário (R$)", min_value=0.01, format="%.2f")
+preco_pago = st.sidebar.number_input("Preço Pago por Unidade (R$)", min_value=0.01, format="%.2f")
+preco_atual_input = st.sidebar.number_input("Preço Atual de Mercado (R$)", min_value=0.01, format="%.2f")
 data_aporte = st.sidebar.date_input("Data do Aporte")
 
 if st.sidebar.button("Adicionar Aporte"):
-    valor_total = qtd_aporte * preco_aporte
-    novo_dado = pd.DataFrame({
-        'Ativo': [ativo_escolhido],
-        'Quantidade': [qtd_aporte],
-        'Preço Unitário': [preco_aporte],
-        'Valor Total': [valor_total],
-        'Data': [data_aporte]
-    })
-    st.session_state.aportes = pd.concat([st.session_state.aportes, novo_dado], ignore_index=True)
-    st.sidebar.success("Aporte registrado com sucesso!")
-    st.rerun()
+novo_dado = pd.DataFrame({
+'Ativo': [ativo_escolhido],
+'Quantidade': [qtd_aporte],
+'Preço Pago': [preco_pago],
+'Preço Atual': [preco_atual_input],
+'Data': [data_aporte]
+})
+st.session_state.aportes = pd.concat([st.session_state.aportes, novo_dado], ignore_index=True)
+st.sidebar.success("Aporte registrado com sucesso!")
+st.rerun()
 
-# ----------------------------------------------------
-# 2. CONSOLIDAÇÃO DA CARTEIRA
-# ----------------------------------------------------
 st.header("Resumo da Carteira")
 
 if not st.session_state.aportes.empty:
-    # Agrupar por ativo para calcular quantidade total e preço médio ponderado
-    df = st.session_state.aportes
-    resumo = df.groupby('Ativo').agg(
-        Quantidade_Total=('Quantidade', 'sum'),
-        Total_Investido=('Valor Total', 'sum')
-    ).reset_index()
-    
-    resumo['Preço Médio'] = resumo['Total_Investido'] / resumo['Quantidade_Total']
-    
-    # Preços atuais editáveis
-    st.markdown("### Defina os Preços Atuais de Mercado")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        preco_petr4 = st.number_input("Preço Atual PETR4", value=35.00, format="%.2f")
-    with col2:
-        preco_bbse3 = st.number_input("Preço Atual BBSE3", value=33.00, format="%.2f")
-    with col3:
-        preco_kncr11 = st.number_input("Preço Atual KNCR11", value=100.00, format="%.2f")
-        
-    precos_atuais = {'PETR4': preco_petr4, 'BBSE3': preco_bbse3, 'KNCR11': preco_kncr11}
-    resumo['Preço Atual'] = resumo['Ativo'].map(precos_atuais)
-    resumo['Valor Atual'] = resumo['Quantidade_Total'] * resumo['Preço Atual']
-    resumo['Lucro/Prejuízo (R$)'] = resumo['Valor Atual'] - resumo['Total_Investido']
-    resumo['Lucro/Prejuízo (%)'] = (resumo['Lucro/Prejuízo (R$)'] / resumo['Total_Investido']) * 100
+df = st.session_state.aportes.copy()
 
-    # Exibindo métricas gerais
-    patrimonio_total = resumo['Valor Atual'].sum()
-    total_investido_geral = resumo['Total_Investido'].sum()
-    lucro_geral = patrimonio_total - total_investido_geral
-    
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Patrimônio Total", f"R$ {patrimonio_total:,.2f}")
-    m2.metric("Total Investido", f"R$ {total_investido_geral:,.2f}")
-    m3.metric("Resultado Geral", f"R$ {lucro_geral:,.2f}", delta=f"{(lucro_geral/total_investido_geral)*100:.2f}%" if total_investido_geral > 0 else "0%")
+df['Total Investido'] = df['Quantidade'] * df['Preço Pago']
+df['Valor Atual'] = df['Quantidade'] * df['Preço Atual']
 
-    st.markdown("### Posição por Ativo")
-    st.dataframe(resumo[['Ativo', 'Quantidade_Total', 'Preço Médio', 'Preço Atual', 'Valor Atual', 'Lucro/Prejuízo (R$)']])
+resumo = df.groupby('Ativo').agg(
+    Quantidade_Total=('Quantidade', 'sum'),
+    Total_Investido=('Total Investido', 'sum'),
+    Valor_Atual=('Valor Atual', 'sum'),
+    Preço_Atual_Ref=('Preço Atual', 'last')
+).reset_index()
 
-    # Gráfico de alocação
-    st.markdown("### Alocação de Recursos")
-    st.bar_chart(resumo.set_index('Ativo')['Valor Atual'])
+resumo['Preço Médio'] = resumo['Total_Investido'] / resumo['Quantidade_Total']
+resumo['Lucro/Prejuízo (R$)'] = resumo['Valor_Atual'] - resumo['Total_Investido']
+resumo['Lucro/Prejuízo (%)'] = (resumo['Lucro/Prejuízo (R$)'] / resumo['Total_Investido']) * 100
 
+patrimonio_total = resumo['Valor_Atual'].sum()
+total_investido_geral = resumo['Total_Investido'].sum()
+lucro_geral = patrimonio_total - total_investido_geral
+
+m1, m2, m3 = st.columns(3)
+m1.metric("Patrimônio Total", f"R$ {patrimonio_total:,.2f}")
+m2.metric("Total Investido", f"R$ {total_investido_geral:,.2f}")
+m3.metric("Resultado Geral", f"R$ {lucro_geral:,.2f}", delta=f"{(lucro_geral/total_investido_geral)*100:.2f}%" if total_investido_geral > 0 else "0%")
+
+st.markdown("### Posição Consolidade por Ativo")
+st.dataframe(resumo[['Ativo', 'Quantidade_Total', 'Preço Médio', 'Preço_Atual_Ref', 'Valor_Atual', 'Lucro/Prejuízo (R$)']])
+
+st.markdown("### Alocação de Recursos")
+st.bar_chart(resumo.set_index('Ativo')['Valor_Atual'])
 else:
-    st.info("Nenhum aporte registrado ainda. Use a barra lateral à esquerda para cadastrar seus primeiros aportes.")
+st.info("Nenhum aporte registrado ainda. Use a barra lateral à esquerda para cadastrar seus primeiros aportes.")
 
-# ----------------------------------------------------
-# 3. HISTÓRICO DE APORTES COM MODO DE EDIÇÃO
-# ----------------------------------------------------
 if not st.session_state.aportes.empty:
-    st.markdown("---")
-    st.header("Histórico Detalhado de Aportes (Editável)")
-    st.markdown("Você pode clicar diretamente na tabela abaixo para editar quantidades, preços ou datas. O valor total será recalculado automaticamente.")
-    
-    # Usando o data_editor para permitir edições diretas na tabela
-    st.session_state.aportes = st.data_editor(
-        st.session_state.aportes, 
-        num_rows="dynamic",
-        key="editor_aportes"
-    )
-    
-    # Recalcula o 'Valor Total' caso o usuário altere Quantidade ou Preço Unitário na tabela
-    st.session_state.aportes['Valor Total'] = st.session_state.aportes['Quantidade'] * st.session_state.aportes['Preço Unitário']
+st.markdown("---")
+st.header("Histórico Detalhado e Edição de Aportes")
+st.markdown("Aqui você pode editar qualquer linha diretamente, incluindo o preço pago e o preço atual de mercado.")
 
-# ----------------------------------------------------
-# 4. ÁREA DE ANOTAÇÕES E ESTUDOS
-# ----------------------------------------------------
+st.session_state.aportes = st.data_editor(
+    st.session_state.aportes, 
+    num_rows="dynamic",
+    key="editor_aportes"
+)
 st.markdown("---")
 st.header("Área de Anotações e Metas de Estudo")
 st.session_state.notas = st.text_area("Bloco de Notas:", value=st.session_state.notas, height=200)
