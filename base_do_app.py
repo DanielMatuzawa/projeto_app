@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from supabase import create_client
+import plotly.express as px
 
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
@@ -96,12 +97,28 @@ with aba_dashboard:
 
         st.markdown("---")
         st.subheader("Visão Geral da Alocação")
-        # Substituição do gráfico de barras por cards de alocação limpos e organizados
-        colunas_alocacao = st.columns(len(resumo))
-        for i, row in resumo.iterrows():
-            percentual_alocacao = (row['Valor Atual'] / patrimonio_total * 100) if patrimonio_total > 0 else 0
-            with colunas_alocacao[i]:
-                st.metric(label=f"Alocação em {row['ativo']}", value=f"{percentual_alocacao:.1f}%", delta=f"R$ {row['Valor Atual']:,.2f}")
+
+        # Preparar dados para o gráfico de pizza (Donut Chart)
+        df_grafico = resumo[['ativo', 'Valor Atual']].copy()
+        df_grafico.columns = ['Ativo', 'Valor R$']
+
+        fig = px.pie(df_grafico, 
+                     values='Valor R$', 
+                     names='Ativo', 
+                     hole=0.4, 
+                     color='Ativo',
+                     color_discrete_map={'PETR4': '#34A853', 'BBSE3': '#FBBC05', 'KNCR11': '#4285F4'}
+                    )
+
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            annotations=[dict(text='Patrimônio', x=0.5, y=0.5, font_size=15, showarrow=False)],
+            height=400,
+            margin=dict(t=0, b=0, l=0, r=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     else:
         st.info("Nenhum dado cadastrado para exibir no dashboard. Vá até a aba de Aportes para registrar suas compras.")
