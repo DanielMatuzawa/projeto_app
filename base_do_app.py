@@ -5,7 +5,6 @@ from supabase import create_client
 
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
-# Configuração direta para teste e funcionamento imediato
 SUPABASE_URL = "https://gmpqpiagdnebzafjiogn.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcXBwaWFnZG5lYnphZmppb2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3ODI4NjMsImV4cCI6MjEwMTM1ODg2M30.xDk4lPnIK0oKjEwK2d4oidMQFt67CDoSzJapRkiUlLA"
 
@@ -13,10 +12,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 def init_connection():
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error(f"Erro ao conectar no banco: {e}")
+supabase = init_connection()
 
 st.title("Painel de Controle de Investimentos e Estudos")
 st.markdown("Foco em: PETR4, BBSE3 e KNCR11 com salvamento automático na nuvem")
@@ -88,7 +84,7 @@ with aba_dashboard:
         total_investido_geral = resumo['Total_Investido'].sum()
         lucro_geral = patrimonio_total - total_investido_geral
         
-        # Métricas principais do Dashboard (Cards superiores)
+        # Métricas principais do Dashboard com layout limpo
         m1, m2, m3 = st.columns(3)
         m1.metric("Patrimônio Total", f"R$ {patrimonio_total:,.2f}")
         m2.metric("Total Investido", f"R$ {total_investido_geral:,.2f}")
@@ -99,17 +95,18 @@ with aba_dashboard:
         st.dataframe(resumo[['ativo', 'Quantidade_Total', 'Preço Médio', 'Preço Atual', 'Valor Atual', 'Lucro/Prejuízo (R$)']], use_container_width=True)
 
         st.markdown("---")
-        st.subheader("Dashboard de Alocação por Ativo")
+        st.subheader("Visão Geral da Alocação")
         
-        # Novo formato de Dashboard: Linhas de progresso e métricas visuais por ativo (Sem gráficos complexos)
-        for _, row in resumo.iterrows():
-            percentual = (row['Valor Atual'] / patrimonio_total * 100) if patrimonio_total > 0 else 0
-            col_info1, col_info2 = st.columns([1, 3])
-            with col_info1:
-                st.markdown(f"**{row['ativo']}**")
-                st.text(f"R$ {row['Valor Atual']:,.2f}")
-            with col_info2:
-                st.progress(int(percentual) if percentual <= 100 else 100, text=f"Alocação: {percentual:.1f}% do portfólio")
+        # Cards de alocação estilizados de forma limpa e responsiva
+        colunas_alocacao = st.columns(len(resumo))
+        for i, row in resumo.iterrows():
+            percentual_alocacao = (row['Valor Atual'] / patrimonio_total * 100) if patrimonio_total > 0 else 0
+            with colunas_alocacao[i]:
+                st.metric(
+                    label=f"Alocação em {row['ativo']}", 
+                    value=f"{percentual_alocacao:.1f}%", 
+                    delta=f"R$ {row['Valor Atual']:,.2f}"
+                )
 
     else:
         st.info("Nenhum dado cadastrado para exibir no dashboard. Vá até a aba de Aportes para registrar suas compras.")
