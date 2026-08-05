@@ -97,15 +97,41 @@ with aba_dashboard:
         st.markdown("---")
         st.subheader("Visão Geral da Alocação")
         # Substituição do gráfico de barras por cards de alocação limpos e organizados
-        colunas_alocacao = st.columns(len(resumo))
-        for i, row in resumo.iterrows():
-            percentual_alocacao = (row['Valor Atual'] / patrimonio_total * 100) if patrimonio_total > 0 else 0
-            with colunas_alocacao[i]:
-                st.metric(label=f"Alocação em {row['ativo']}", value=f"{percentual_alocacao:.1f}%", delta=f"R$ {row['Valor Atual']:,.2f}")
+        st.markdown("---")
+        st.subheader("Visão Geral da Alocação (Dashboard)")
 
-    else:
-        st.info("Nenhum dado cadastrado para exibir no dashboard. Vá até a aba de Aportes para registrar suas compras.")
+        # Preparar dados para o gráfico de pizza (Donut Chart)
+        df_grafico = resumo[['ativo', 'Valor Atual']].copy()
+        # Renomear para aparecer bonito no gráfico
+        df_grafico.columns = ['Ativo', 'Valor R$']
 
+        import plotly.express as px
+
+        # Criar o gráfico de pizza (donut)
+        fig = px.pie(df_grafico, 
+                     values='Valor R$', 
+                     names='Ativo', 
+                     hole=0.4, # Define o estilo donut (buraco no meio)
+                     color='Ativo',
+                     # Cores personalizadas para combinar com o tema escuro (opcional)
+                     color_discrete_map={'PETR4': '#34A853', 'BBSE3': '#FBBC05', 'KNCR11': '#4285F4'}
+                    )
+
+        # Ajustar layout do gráfico
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            # Título centralizado dentro do donut
+            annotations=[dict(text='Patrimônio', x=0.5, y=0.5, font_size=15, showarrow=False)],
+            # Tamanho do gráfico
+            height=400,
+            # Margens
+            margin=dict(t=0, b=0, l=0, r=0),
+            # Fundo transparente para o Streamlit
+            paper_bgcolor='rgba(0,0,0,0)',
+        )
+
+        # Exibir o gráfico no Streamlit
+        st.plotly_chart(fig, use_container_width=True)
 # ==================== ABA 2: APORTES ====================
 with aba_aportes:
     st.header("Gerenciamento de Aportes")
