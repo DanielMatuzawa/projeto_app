@@ -49,10 +49,8 @@ tickers_map = {
     "KNCR11": "KNCR11.SA"
 }
 
-# Criando as abas de navegação principais
 aba_dashboard, aba_aportes, aba_notas = st.tabs(["Dashboard Geral", "Cadastrar & Histórico de Aportes", "Anotações e Estudos"])
 
-# ==================== ABA 1: DASHBOARD ====================
 with aba_dashboard:
     st.header("Dashboard de Desempenho")
 
@@ -84,7 +82,6 @@ with aba_dashboard:
         total_investido_geral = resumo['Total_Investido'].sum()
         lucro_geral = patrimonio_total - total_investido_geral
         
-        # Métricas principais do Dashboard
         m1, m2, m3 = st.columns(3)
         m1.metric("Patrimônio Total", f"R$ {patrimonio_total:,.2f}")
         m2.metric("Total Investido", f"R$ {total_investido_geral:,.2f}")
@@ -96,7 +93,7 @@ with aba_dashboard:
 
         st.markdown("---")
         st.subheader("Visão Geral da Alocação")
-        # Substituição do gráfico de barras por cards de alocação limpos e organizados
+        
         colunas_alocacao = st.columns(len(resumo))
         for i, row in resumo.iterrows():
             percentual_alocacao = (row['Valor Atual'] / patrimonio_total * 100) if patrimonio_total > 0 else 0
@@ -106,7 +103,6 @@ with aba_dashboard:
     else:
         st.info("Nenhum dado cadastrado para exibir no dashboard. Vá até a aba de Aportes para registrar suas compras.")
 
-# ==================== ABA 2: APORTES ====================
 with aba_aportes:
     st.header("Gerenciamento de Aportes")
     
@@ -140,7 +136,6 @@ with aba_aportes:
         else:
             st.info("Nenhum aporte registrado ainda.")
 
-# ==================== ABA 3: ANOTAÇÕES ====================
 with aba_notas:
     st.header("Área de Anotações e Metas de Estudo")
     st.markdown("Use este espaço livre para registrar suas teses de investimento, lembretes e planos para PETR4, BBSE3 e KNCR11.")
