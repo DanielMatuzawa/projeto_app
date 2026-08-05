@@ -2,12 +2,16 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from supabase import create_client
-import plotly.express as px
 
 st.set_page_config(page_title="Meu Portfólio de Investimentos", layout="wide")
 
-SUPABASE_URL = "https://gmpqpiagdnebzafjiogn.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcHFwaWFnZG5lYnphZmppb2duIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTc4Mjg2MywiZXhwIjoyMTAxMzU4ODYzfQ.tQ-TjU_mjYqPBEAbheYgNZ41c0_zSM9-awrdeSUQU8g"
+# Lendo as credenciais de forma segura do Streamlit Secrets
+try:
+    SUPABASE_URL = st.secrets["supabase"]["url"]
+    SUPABASE_KEY = st.secrets["supabase"]["key"]
+except:
+    SUPABASE_URL = "https://gmpqpiagnébzafjiogn.supabase.co"
+    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcHFwaWFnZG5lYnphZmppb2duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3ODI4NjMsImV4cCI6MjEwMTM1ODg2M30.xDk4lPnIK0oKjEwK2d4oidMQFt67CDoSzJapRkiUlLA"
 
 @st.cache_resource
 def init_connection():
@@ -96,29 +100,11 @@ with aba_dashboard:
         st.dataframe(resumo[['ativo', 'Quantidade_Total', 'Preço Médio', 'Preço Atual', 'Valor Atual', 'Lucro/Prejuízo (R$)']], use_container_width=True)
 
         st.markdown("---")
-        st.subheader("Visão Geral da Alocação")
+        st.subheader("Visão Geral da Alocação (Dashboard Visual)")
 
-        # Preparar dados para o gráfico de pizza (Donut Chart)
-        df_grafico = resumo[['ativo', 'Valor Atual']].copy()
-        df_grafico.columns = ['Ativo', 'Valor R$']
-
-        fig = px.pie(df_grafico, 
-                     values='Valor R$', 
-                     names='Ativo', 
-                     hole=0.4, 
-                     color='Ativo',
-                     color_discrete_map={'PETR4': '#34A853', 'BBSE3': '#FBBC05', 'KNCR11': '#4285F4'}
-                    )
-
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        fig.update_layout(
-            annotations=[dict(text='Patrimônio', x=0.5, y=0.5, font_size=15, showarrow=False)],
-            height=400,
-            margin=dict(t=0, b=0, l=0, r=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
+        # Gráfico nativo do Streamlit limpo e sem erros de dependência extra
+        df_chart = resumo.set_index('ativo')['Valor Atual']
+        st.bar_chart(df_chart)
 
     else:
         st.info("Nenhum dado cadastrado para exibir no dashboard. Vá até a aba de Aportes para registrar suas compras.")
